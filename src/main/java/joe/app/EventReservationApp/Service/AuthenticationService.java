@@ -38,7 +38,7 @@ public class AuthenticationService {
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDTO) {
         String username = signupRequestDTO.getUsername() != null ? signupRequestDTO.getUsername().trim() : null;
         String email = signupRequestDTO.getEmail() != null ? signupRequestDTO.getEmail().trim() : null;
-        Role role = Role.valueOf(signupRequestDTO.getRole() != null ? signupRequestDTO.getRole().trim() : null);
+        String name = signupRequestDTO.getName() != null ? signupRequestDTO.getName().trim() : null
         if (userRepository.existsByUsername(username)) {
             throw new UserCreationConflictException("Username Already exists");
         }
@@ -49,10 +49,11 @@ public class AuthenticationService {
         newUser.setUsername(username);
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(signupRequestDTO.getPassword()));
-        newUser.setRole(role);
+        newUser.setName(name);
+        newUser.setRole(Role.CUSTOMER);
 
         String jwt = jwtService.generateToken(newUser.getUsername(), newUser.getRole());
-        User savedUser = userRepository.save(newUser);
+        User savedUser = userRepository.saveAndFlush(newUser);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
 
         AuthResponseDTO authResponseDTO = new AuthResponseDTO();
@@ -97,9 +98,8 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void logout(String requestRefreshToken) {
-        refreshTokenService.findByToken(requestRefreshToken)
-                .map(RefreshToken::getUser)
+    public void logout(String username) {
+        userRepository.findByUsername(username)
                 .ifPresent(user -> refreshTokenService.deleteByUserId(user.getId()));
     }
 }

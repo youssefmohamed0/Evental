@@ -29,6 +29,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String name;
+
     @CreationTimestamp
     @Column(name = "creation_date", nullable = false, updatable = false)
     private LocalDateTime creationDate;

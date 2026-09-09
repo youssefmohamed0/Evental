@@ -5,7 +5,6 @@ import joe.app.EventReservationApp.Exception.TokenRefreshException;
 import joe.app.EventReservationApp.Model.RefreshToken;
 import joe.app.EventReservationApp.Model.User;
 import joe.app.EventReservationApp.Repository.RefreshTokenRepository;
-import joe.app.EventReservationApp.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,13 +22,9 @@ public class RefreshTokenService {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Transactional
     public RefreshToken createRefreshToken(User user) {
-        // Delete any existing refresh token for the user to only have one active
-        refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.deleteByUserId(user.getId());
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
@@ -53,8 +48,6 @@ public class RefreshTokenService {
 
     @Transactional
     public void deleteByUserId(UUID userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            refreshTokenRepository.deleteByUser(user);
-        });
+        refreshTokenRepository.deleteByUserId(userId);
     }
 }
