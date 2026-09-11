@@ -35,4 +35,25 @@ public class GlobalExceptionHandler {
         log.warn("Token refresh exception: {} path: {}", ex.getMessage(), httpServletRequest.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
+
+    @ExceptionHandler(joe.app.EventReservationApp.Exception.EventNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleEventNotFoundException(joe.app.EventReservationApp.Exception.EventNotFoundException ex, HttpServletRequest httpServletRequest) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(ex.getMessage(), HttpStatus.NOT_FOUND.value(), httpServletRequest.getRequestURI(), LocalDateTime.now());
+        log.warn("Event not found: {} path: {}", ex.getMessage(), httpServletRequest.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(joe.app.EventReservationApp.Exception.VenueNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleVenueNotFoundException(joe.app.EventReservationApp.Exception.VenueNotFoundException ex, HttpServletRequest httpServletRequest) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(ex.getMessage(), HttpStatus.NOT_FOUND.value(), httpServletRequest.getRequestURI(), LocalDateTime.now());
+        log.warn("Venue not found: {} path: {}", ex.getMessage(), httpServletRequest.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(joe.app.EventReservationApp.Exception.UnauthorizedEventAccessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUnauthorizedEventAccessException(joe.app.EventReservationApp.Exception.UnauthorizedEventAccessException ex, HttpServletRequest httpServletRequest) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(ex.getMessage(), HttpStatus.FORBIDDEN.value(), httpServletRequest.getRequestURI(), LocalDateTime.now());
+        log.warn("Unauthorized event access: {} path: {}", ex.getMessage(), httpServletRequest.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
 }

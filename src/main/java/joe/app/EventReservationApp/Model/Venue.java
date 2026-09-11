@@ -18,6 +18,9 @@ public class Venue {
     private UUID id;
 
     @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
     private String location;
 
     @Column(nullable = false)
