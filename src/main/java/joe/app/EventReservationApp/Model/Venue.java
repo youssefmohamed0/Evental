@@ -22,4 +22,7 @@ public class Venue {
 
     @Column(nullable = false)
     private int stars;
+
+    @Column
+    private String description;
 }

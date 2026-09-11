@@ -38,7 +38,8 @@ public class AuthenticationService {
     public AuthResponseDTO signup(SignupRequestDTO signupRequestDTO) {
         String username = signupRequestDTO.getUsername() != null ? signupRequestDTO.getUsername().trim() : null;
         String email = signupRequestDTO.getEmail() != null ? signupRequestDTO.getEmail().trim() : null;
-        String name = signupRequestDTO.getName() != null ? signupRequestDTO.getName().trim() : null
+        String name = signupRequestDTO.getName() != null ? signupRequestDTO.getName().trim() : null;
+        
         if (userRepository.existsByUsername(username)) {
             throw new UserCreationConflictException("Username Already exists");
         }

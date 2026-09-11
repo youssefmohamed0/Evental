@@ -45,4 +45,10 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Seat> seats;
+
+    @Column
+    private String description;
+
+    @Column
+    private String theme;
 }
