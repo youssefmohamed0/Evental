@@ -10,12 +10,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import joe.app.EventReservationApp.DTO.CreateEventRequestDTO;
+import joe.app.EventReservationApp.DTO.CreateVenueDTO;
 import joe.app.EventReservationApp.DTO.EventDetailDTO;
 import joe.app.EventReservationApp.DTO.EventSummaryDTO;
 import joe.app.EventReservationApp.DTO.ReservationDetailDTO;
 import joe.app.EventReservationApp.DTO.ReservationSummaryDTO;
+import joe.app.EventReservationApp.DTO.VenueSummaryDTO;
 import joe.app.EventReservationApp.Service.EventService;
 import joe.app.EventReservationApp.Service.ReservationService;
+import joe.app.EventReservationApp.Service.VenueService;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -25,14 +28,17 @@ public class AdminController {
     private EventService eventService;
     @Autowired
     private ReservationService reservationService;
+    @Autowired
+    private VenueService venueService;
 
-// redundant: could be same as public endpoint
+    // redundant: could be same as public endpoint
     @GetMapping("/events")
     public ResponseEntity<List<EventSummaryDTO>> getAllEvents() {
         List<EventSummaryDTO> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
-// redundant: could be same as public endpoint
+
+    // redundant: could be same as public endpoint
     @GetMapping("/events/{eventId}")
     public ResponseEntity<EventDetailDTO> getEventDetails(@PathVariable UUID eventId) {
         EventDetailDTO event = eventService.getEventDetailsById(eventId);
@@ -79,8 +85,9 @@ public class AdminController {
     }
 
     @GetMapping("/events/{eventId}/reservations")
-    public ResponseEntity<List<ReservationSummaryDTO>> getReservationsByEventId(@PathVariable UUID eventId, Authentication authentication) {
-        List<ReservationSummaryDTO> response = reservationService.getReservationsByEventId(eventId,authentication);
+    public ResponseEntity<List<ReservationSummaryDTO>> getReservationsByEventId(@PathVariable UUID eventId,
+            Authentication authentication) {
+        List<ReservationSummaryDTO> response = reservationService.getReservationsByEventId(eventId, authentication);
         return ResponseEntity.ok(response);
     }
 
@@ -90,16 +97,36 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/venues")
+    public ResponseEntity<VenueSummaryDTO> createVenue(@RequestBody CreateVenueDTO requestDTO) {
+        VenueSummaryDTO venue = venueService.createVenue(requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(venue);
+    }
+
+    @PutMapping("/venues/{venueId}")
+    public ResponseEntity<VenueSummaryDTO> updateVenue(@PathVariable UUID venueId,
+            @RequestBody CreateVenueDTO requestDTO) {
+        VenueSummaryDTO venue = venueService.updateVenue(venueId, requestDTO);
+        return ResponseEntity.ok(venue);
+    }
+
+    @DeleteMapping("/venues/{venueId}")
+    public ResponseEntity<Void> deleteVenue(@PathVariable UUID venueId) {
+        venueService.deleteVenue(venueId);
+        return ResponseEntity.ok(null);
+    }
+
     // @GetMapping("/users")
     // public ResponseEntity<List<UserSummaryDTO>> getAllUsers() {
-    //     List<UserSummaryDTO> response = userService.getAllUsers();
-    //     return ResponseEntity.ok(response);
+    // List<UserSummaryDTO> response = userService.getAllUsers();
+    // return ResponseEntity.ok(response);
     // }
 
     // @GetMapping("/users/{userId}")
-    // public ResponseEntity<UserDetailDTO> getUserById(@PathVariable UUID userId, Authentication authentication) {
-    //     UserDetailDTO response = userService.getUserById(userId, authentication);
-    //     return ResponseEntity.ok(response);
+    // public ResponseEntity<UserDetailDTO> getUserById(@PathVariable UUID userId,
+    // Authentication authentication) {
+    // UserDetailDTO response = userService.getUserById(userId, authentication);
+    // return ResponseEntity.ok(response);
     // }
 
 }
