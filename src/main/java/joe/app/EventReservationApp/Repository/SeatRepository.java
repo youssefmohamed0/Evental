@@ -10,6 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, UUID> {
-    List<Seat> findByEventId(UUID eventId);
+    List<Seat> findByEventId(UUID eventId); // why?
     int countByEventIdAndStatus(UUID eventId, SeatStatus status);
 }

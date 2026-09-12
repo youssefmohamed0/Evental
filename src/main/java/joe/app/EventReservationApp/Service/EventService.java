@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import joe.app.EventReservationApp.DTO.CreateEventRequestDTO;
 import joe.app.EventReservationApp.DTO.EventDetailDTO;
 import joe.app.EventReservationApp.DTO.EventSummaryDTO;
+import joe.app.EventReservationApp.DTO.SeatResponseDTO;
 import joe.app.EventReservationApp.Enum.Role;
 import joe.app.EventReservationApp.Enum.SeatStatus;
 import joe.app.EventReservationApp.Exception.EventNotFoundException;
@@ -59,11 +60,21 @@ public class EventService {
         return eventMapper.toEventDetailDTO(event, availableSeats);
     }
 
-    // ORGANIZER
+    public List<SeatResponseDTO> getSeatsByEventId(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + eventId));
+        return eventMapper.toSeatResponseDTOList(event.getSeats());
+    }
+
+    public List<EventSummaryDTO> getEventsByVenuId(UUID venueId) {
+        List<Event> events = eventRepository.findByVenueId(venueId);
+        return eventMapper.toEventSummaryDTOList(events);
+    }
+
+    // ORGANIZER/ADMIN
     public List<EventSummaryDTO> getEventsByOrganizerUsername(String organizerUsername) {
-        return eventRepository.findByOrganizerUsername(organizerUsername).stream()
-                .map(event -> eventMapper.toEventSummaryDTO(event, event.getSeats().size()))
-                .collect(Collectors.toList());
+        List<Event> events = eventRepository.findByOrganizerUsername(organizerUsername);
+        return eventMapper.toEventSummaryDTOList(events);
     }
 
     public EventDetailDTO updateEventDetails(UUID eventId, CreateEventRequestDTO requestDTO) {
@@ -114,16 +125,22 @@ public class EventService {
         if (event.getSeats().stream()
                 .filter(seat -> seat.getStatus() == SeatStatus.RESERVED || seat.getStatus() == SeatStatus.BOOKED)
                 .count() > 0) {
-            throw new RuntimeException("Event cannot be deleted because it has reserved or booked seats");
+            throw new RuntimeException("Event cannot be deleted because it has pending or booked seats");
         }
         eventRepository.delete(event);
     }
 
     private void createSeatsForEvent(Event event) { // TODO this is very costly
+        int seatsPerRow = 6; // TODO can make this a value related to venue
         for (int i = 1; i <= event.getSeatCapacity(); i++) {
+            int rowIndex = i - 1 / seatsPerRow;
+            int seatNumberInRow = (i - 1 % seatsPerRow) + 1;
+            char rowLetter = (char) ('A' + rowIndex);
+            String seatNumber = rowLetter + String.valueOf(seatNumberInRow);
+
             Seat seat = new Seat();
             seat.setEvent(event);
-            seat.setSeatNumber(String.valueOf(i));
+            seat.setSeatNumber(seatNumber);
             seat.setStatus(SeatStatus.AVAILABLE);
             seat.setVersion(0);
             seatRepository.save(seat);
