@@ -18,7 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import joe.app.EventReservationApp.DTO.CreateEventRequestDTO;
 import joe.app.EventReservationApp.DTO.EventDetailDTO;
 import joe.app.EventReservationApp.DTO.EventSummaryDTO;
+import joe.app.EventReservationApp.DTO.ReservationDetailDTO;
+import joe.app.EventReservationApp.DTO.ReservationSummaryDTO;
 import joe.app.EventReservationApp.Service.EventService;
+import joe.app.EventReservationApp.Service.ReservationService;
 
 @RestController 
 @RequestMapping("/api/organizer")
@@ -27,6 +30,8 @@ public class OrganizerController {
 
     @Autowired 
     private EventService eventService;
+    @Autowired 
+    private ReservationService reservationService;
 
     @PostMapping("/events")
     public ResponseEntity<EventSummaryDTO> createEvent(@RequestBody CreateEventRequestDTO requestDTO, Authentication authentication) {
@@ -51,5 +56,17 @@ public class OrganizerController {
     public ResponseEntity<EventDetailDTO> getEventDetails(@PathVariable UUID eventId) {
         EventDetailDTO event = eventService.getEventDetailsById(eventId);
         return ResponseEntity.ok(event);
+    }
+
+    @GetMapping("/events/{eventId}/reservations")
+    public ResponseEntity<List<ReservationSummaryDTO>> getReservationsByEventId(@PathVariable UUID eventId, Authentication authentication) {
+        List<ReservationSummaryDTO> reservations = reservationService.getReservationsByEventId(eventId, authentication);
+        return ResponseEntity.ok(reservations);
+    }
+
+    @GetMapping("/reservations/{reservationId}")
+    public ResponseEntity<ReservationDetailDTO> getReservationByReservationId(@PathVariable UUID reservationId, Authentication authentication) {
+        ReservationDetailDTO reservation = reservationService.getReservationById(reservationId, authentication);
+        return ResponseEntity.ok(reservation);
     }
 }

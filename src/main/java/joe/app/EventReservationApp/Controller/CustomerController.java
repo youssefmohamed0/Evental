@@ -1,6 +1,5 @@
 package joe.app.EventReservationApp.Controller;
 
-
 import java.util.List;
 import java.util.UUID;
 
@@ -18,17 +17,15 @@ import joe.app.EventReservationApp.Service.ReservationService;
 @RestController
 @RequestMapping("/api/customer")
 public class CustomerController {
-    
+
     @Autowired
     private ReservationService reservationService;
-
-
-
 
     // reservations
 
     @PostMapping("/reservations")
-    public ResponseEntity<?> createReservation(@RequestBody CreateReservationRequestDTO request, Authentication authentication) {
+    public ResponseEntity<?> createReservation(@RequestBody CreateReservationRequestDTO request,
+            Authentication authentication) {
         CreateReservationResponseDTO response = reservationService.createReservation(request, authentication);
         return ResponseEntity.ok(response);
     }
@@ -39,21 +36,22 @@ public class CustomerController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping ("/reservations/history")
+    @GetMapping("/reservations/history")
     public ResponseEntity<List<ReservationSummaryDTO>> getReservationsHistory(Authentication authentication) {
         List<ReservationSummaryDTO> response = reservationService.getReservationHistory(authentication.getName());
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/reservations/{reservationId}")
-    public ResponseEntity<ReservationDetailDTO> getReservationById(@PathVariable UUID reservationId) {
-        ReservationDetailDTO response = reservationService.getReservationById(reservationId);
+    public ResponseEntity<ReservationDetailDTO> getReservationById(@PathVariable UUID reservationId,
+            Authentication authentication) {
+        ReservationDetailDTO response = reservationService.getReservationById(reservationId, authentication);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/reservations/{reservationId}")
-    public ResponseEntity<Void> cancelReservation(@PathVariable UUID reservationId) {
-        reservationService.cancelReservation(reservationId);
+    public ResponseEntity<Void> cancelReservation(@PathVariable UUID reservationId, Authentication authentication) {
+        reservationService.cancelReservation(reservationId, authentication);
         return ResponseEntity.ok(null);
     }
 

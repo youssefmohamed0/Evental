@@ -46,7 +46,7 @@ public class EventService {
 
     public List<EventSummaryDTO> getAllEvents() {
         return eventRepository.findAll().stream()
-                .map(event -> eventMapper.toEventSummaryDTO(event, event.getSeats().size()))
+                .map(event -> eventMapper.toEventSummaryDTO(event))
                 .collect(Collectors.toList());
     }
 
@@ -81,15 +81,18 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + eventId));
         // if (requestDTO.getSeatCapacity() < event.getSeats().stream()
-        //         .filter(seat -> seat.getStatus() == SeatStatus.RESERVED || seat.getStatus() == SeatStatus.BOOKED)
-        //         .count()) {
-        //     throw new RuntimeException("Event seat capacity cannot be less than reserved or booked seats");
+        // .filter(seat -> seat.getStatus() == SeatStatus.RESERVED || seat.getStatus()
+        // == SeatStatus.BOOKED)
+        // .count()) {
+        // throw new RuntimeException("Event seat capacity cannot be less than reserved
+        // or booked seats");
         // }
         checkEventValidity(requestDTO);
         event.setName(requestDTO.getName());
         event.setStartTime(requestDTO.getStartTimestamp());
         event.setEndTime(requestDTO.getEndTimestamp());
-        event.setTicketPrice(requestDTO.getTicketPrice()); // cant update seat capacity because you will have to remove or add specifc seat which is a pain in the butt
+        event.setTicketPrice(requestDTO.getTicketPrice()); // cant update seat capacity because you will have to remove
+                                                           // or add specifc seat which is a pain in the butt
         // event.setSeatCapacity(requestDTO.getSeatCapacity());
         event.setDescription(requestDTO.getDescription());
         event.setTheme(requestDTO.getTheme());

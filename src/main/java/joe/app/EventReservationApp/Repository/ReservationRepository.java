@@ -16,4 +16,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
 
     List<Reservation> findByCustomerIdAndEventEndTimeBefore(UUID customerId, LocalDateTime endTime);
 
+    List<Reservation> findByEventId(UUID eventId);
+
+    List<Reservation> findByEventVenueId(UUID venueId);
+
 }

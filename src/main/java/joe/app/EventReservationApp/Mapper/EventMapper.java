@@ -15,14 +15,20 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface EventMapper {
 
-    @Mapping(source = "event.venue.id", target = "venueId")
-    @Mapping(source = "event.venue.name", target = "venueName")
-    @Mapping(source = "event.venue.stars", target = "venueStars")
-    @Mapping(source = "event.startTime", target = "startTimestamp")
-    @Mapping(source = "availableSeats", target = "seatCapacity")
-    EventSummaryDTO toEventSummaryDTO(Event event, long availableSeats);
+    @Mapping(source = "venue.id", target = "venueId")
+    @Mapping(source = "venue.name", target = "venueName")
+    @Mapping(source = "venue.stars", target = "venueStars")
+    @Mapping(source = "startTime", target = "startTimestamp")
+    @Mapping(target = "seatCapacity", expression = "java(calculateAvailable(event))")
+    EventSummaryDTO toEventSummaryDTO(Event event);
 
     List<EventSummaryDTO> toEventSummaryDTOList(List<Event> events);
+
+    default int calculateAvailable(Event event) {
+        if (event.getSeats() == null)
+            return 0;
+        return (int) event.getSeatCapacity();
+    }
 
     @Mapping(source = "event.venue.id", target = "venueId")
     @Mapping(source = "event.venue.name", target = "venueName")
