@@ -69,9 +69,10 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/logout").authenticated()
                                 .requestMatchers("/api/events/**").permitAll()
                                 .requestMatchers("/api/venues/**").permitAll()
-                                .requestMatchers("/api/user/**").hasRole("CUSTOMER")
+                                .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/api/organizer/**").hasRole("ORGANIZER")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/profile/**").hasAnyRole("ADMIN", "ORGANIZER", "CUSTOMER")
                                 .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
