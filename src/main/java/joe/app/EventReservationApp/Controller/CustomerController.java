@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import joe.app.EventReservationApp.DTO.CreateReservationRequestDTO;
 import joe.app.EventReservationApp.DTO.CreateReservationResponseDTO;
+import joe.app.EventReservationApp.DTO.PaymentRequestDTO;
 import joe.app.EventReservationApp.DTO.ReservationDetailDTO;
 import joe.app.EventReservationApp.DTO.ReservationSummaryDTO;
+import joe.app.EventReservationApp.Service.PaymentService;
 import joe.app.EventReservationApp.Service.ReservationService;
 
 @RestController
@@ -20,6 +22,8 @@ public class CustomerController {
 
     @Autowired
     private ReservationService reservationService;
+    @Autowired 
+    private PaymentService paymentService;
 
     // reservations
 
@@ -53,6 +57,12 @@ public class CustomerController {
     public ResponseEntity<Void> cancelReservation(@PathVariable UUID reservationId, Authentication authentication) {
         reservationService.cancelReservation(reservationId, authentication);
         return ResponseEntity.ok(null);
+    }
+
+    @PostMapping("/reservations/{reservationId}/pay")
+    public ResponseEntity<String> processPayment(@PathVariable UUID reservationId, @RequestBody PaymentRequestDTO paymentRequestDTO) {
+        String response = paymentService.processPayment(reservationId, paymentRequestDTO);
+        return ResponseEntity.ok(response);
     }
 
 }

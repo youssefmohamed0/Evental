@@ -164,7 +164,7 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
-        // TODO: refundS?
+        // TODO: refundS? only if booked though
         for (ReservationItem item : reservation.getItems()) {
             item.getSeat().setStatus(SeatStatus.AVAILABLE);
         }
