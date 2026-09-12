@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,27 +13,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import joe.app.EventReservationApp.DTO.CreateReservationRequestDTO;
-import joe.app.EventReservationApp.DTO.CreateReservationResponseDTO;
-import joe.app.EventReservationApp.DTO.ReservationDetailDTO;
-import joe.app.EventReservationApp.DTO.ReservationSummaryDTO;
-import joe.app.EventReservationApp.DTO.SeatResponseDTO;
-import joe.app.EventReservationApp.Enum.ReservationStatus;
-import joe.app.EventReservationApp.Enum.Role;
-import joe.app.EventReservationApp.Enum.SeatStatus;
-import joe.app.EventReservationApp.Exception.EventNotFoundException;
+import joe.app.EventReservationApp.DTO.*;
+import joe.app.EventReservationApp.Enum.*;
+import joe.app.EventReservationApp.Exception.*;
 import joe.app.EventReservationApp.Mapper.ReservationMapper;
-import joe.app.EventReservationApp.Model.Event;
-import joe.app.EventReservationApp.Model.Reservation;
-import joe.app.EventReservationApp.Model.ReservationItem;
-import joe.app.EventReservationApp.Model.Seat;
-import joe.app.EventReservationApp.Model.User;
-import joe.app.EventReservationApp.Model.Venue;
-import joe.app.EventReservationApp.Repository.EventRepository;
-import joe.app.EventReservationApp.Repository.ReservationRepository;
-import joe.app.EventReservationApp.Repository.SeatRepository;
-import joe.app.EventReservationApp.Repository.UserRepository;
-import joe.app.EventReservationApp.Repository.VenueRepository;
+import joe.app.EventReservationApp.Model.*;
+import joe.app.EventReservationApp.Repository.*;
 
 @Service
 public class ReservationService {
@@ -73,10 +57,10 @@ public class ReservationService {
 
         for (Seat seat : loadedSeats) {
             if (!seat.getEvent().getId().equals(eventId)) {
-                throw new IllegalArgumentException("Seat " + seat.getId() + " does not belong to event " + eventId);
+                throw new InvalidReservationArgumentsException("Seat " + seat.getId() + " does not belong to event " + eventId);
             }
             if (seat.getStatus() != SeatStatus.AVAILABLE) { // availability check
-                throw new IllegalStateException("Seat " + seat.getSeatNumber() + " is no longer available.");
+                throw new ReservationConflictException("Seat " + seat.getSeatNumber() + " is no longer available.");
             }
 
             // Changing status automatically flags it to be saved because of @Transactional
@@ -124,7 +108,7 @@ public class ReservationService {
 
     public ReservationDetailDTO getReservationById(UUID reservationId, Authentication authentication) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found with ID: " + reservationId));
 
         authorizeReservationAccess(reservation, authentication);
 
@@ -141,7 +125,7 @@ public class ReservationService {
 
     public List<ReservationSummaryDTO> getReservationsByVenueId(UUID venueId) { // for admin only
         Venue venue = venueRepository.findById(venueId)
-                .orElseThrow(() -> new RuntimeException("Venue not found with ID: " + venueId));
+                .orElseThrow(() -> new VenueNotFoundException("Venue not found with ID: " + venueId));
 
         List<Reservation> reservations = reservationRepository.findByEventVenueId(venue.getId());
         return reservationMapper.toReservationSummaryDTOList(reservations);
@@ -155,12 +139,12 @@ public class ReservationService {
     @Transactional
     public void cancelReservation(UUID reservationId, Authentication authentication) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found with ID: " + reservationId));
 
         authorizeReservationAccess(reservation, authentication);
 
         if (reservation.getStatus() == ReservationStatus.CANCELLED) {
-            throw new IllegalStateException("Reservation is already cancelled");
+            throw new ReservationConflictException("Reservation is already cancelled");
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
@@ -178,10 +162,10 @@ public class ReservationService {
                 .map(GrantedAuthority::getAuthority)
                 .orElseThrow(() -> new IllegalArgumentException("You are not logged in"));
         if (role.equals("ORGANIZER") && !reservation.getEvent().getOrganizer().getUsername().equals(username)) {
-            throw new IllegalArgumentException("You are not the organizer of this reservation");
+            throw new UnauthorizedReservationAccessException("You are not the organizer of this reservation");
         }
         if (role.equals("CUSTOMER") && !reservation.getCustomer().getUsername().equals(username)) {
-            throw new IllegalArgumentException("You are not the customer of this reservation");
+            throw new UnauthorizedReservationAccessException("You are not the customer of this reservation");
         }
     }
 
@@ -190,9 +174,9 @@ public class ReservationService {
         String role = authentication.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
-                .orElseThrow(() -> new IllegalArgumentException("You are not logged in"));
+                .orElseThrow(() -> new UnauthorizedReservationAccessException("You are not logged in"));
         if (role.equals("ORGANIZER") && !event.getOrganizer().getUsername().equals(username)) {
-            throw new IllegalArgumentException("You are not the organizer of this event");
+            throw new UnauthorizedReservationAccessException("You are not the organizer of this event");
         }
     }
 

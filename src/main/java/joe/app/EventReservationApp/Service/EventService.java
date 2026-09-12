@@ -7,24 +7,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import joe.app.EventReservationApp.DTO.CreateEventRequestDTO;
-import joe.app.EventReservationApp.DTO.EventDetailDTO;
-import joe.app.EventReservationApp.DTO.EventSummaryDTO;
-import joe.app.EventReservationApp.DTO.SeatResponseDTO;
-import joe.app.EventReservationApp.Enum.Role;
-import joe.app.EventReservationApp.Enum.SeatStatus;
-import joe.app.EventReservationApp.Exception.EventNotFoundException;
+import joe.app.EventReservationApp.DTO.*;
+import joe.app.EventReservationApp.Enum.*;
+import joe.app.EventReservationApp.Exception.*;
 import joe.app.EventReservationApp.Mapper.EventMapper;
-import joe.app.EventReservationApp.Model.Event;
-import joe.app.EventReservationApp.Model.Seat;
-import joe.app.EventReservationApp.Model.User;
-import joe.app.EventReservationApp.Model.Venue;
-import joe.app.EventReservationApp.Repository.EventRepository;
-import joe.app.EventReservationApp.Repository.SeatRepository;
-import joe.app.EventReservationApp.Repository.UserRepository;
-import joe.app.EventReservationApp.Repository.VenueRepository;
+import joe.app.EventReservationApp.Model.*;
+import joe.app.EventReservationApp.Repository.*;
 
 @Service
 public class EventService {
@@ -104,14 +95,14 @@ public class EventService {
         String organizerUsername = authentication.getName();
         checkEventValidity(requestDTO);
         Venue venue = venueRepository.findById(requestDTO.getVenueId())
-                .orElseThrow(() -> new RuntimeException("Venue not found with id: " + requestDTO.getVenueId()));
+                .orElseThrow(() -> new VenueNotFoundException("Venue not found with id: " + requestDTO.getVenueId()));
         Event event = eventMapper.toEvent(requestDTO);
         event.setVenue(venue);
         User organizer = userRepository.findByUsername(organizerUsername)
-                .orElseThrow(() -> new RuntimeException("Organizer not found with username: " + organizerUsername));
+                .orElseThrow(() -> new UsernameNotFoundException("Organizer not found with username: " + organizerUsername));
 
         if (organizer.getRole() != Role.ORGANIZER) { // should never happen anyways
-            throw new RuntimeException("User " + organizerUsername + " is not an organizer");
+            throw new UnauthorizedEventAccessException("User " + organizerUsername + " is not an organizer");
         }
         event.setOrganizer(organizer);
         Event savedEvent = eventRepository.save(event);
@@ -128,7 +119,7 @@ public class EventService {
         if (event.getSeats().stream()
                 .filter(seat -> seat.getStatus() == SeatStatus.RESERVED || seat.getStatus() == SeatStatus.BOOKED)
                 .count() > 0) {
-            throw new RuntimeException("Event cannot be deleted because it has pending or booked seats");
+            throw new InvalidEventArgumentsException("Event cannot be deleted because it has pending or booked seats");
         }
         eventRepository.delete(event);
     }
@@ -152,20 +143,20 @@ public class EventService {
 
     private void checkEventValidity(CreateEventRequestDTO requestDTO) {
         if (requestDTO.getStartTimestamp().isAfter(requestDTO.getEndTimestamp())) {
-            throw new RuntimeException("Event start time cannot be after event end time");
+            throw new InvalidEventArgumentsException("Event start time cannot be after event end time");
         }
         if (requestDTO.getEndTimestamp().isBefore(requestDTO.getStartTimestamp())) {
-            throw new RuntimeException("Event end time cannot be before event start time");
+            throw new InvalidEventArgumentsException("Event end time cannot be before event start time");
         }
         // if(requestDTO.getStartTimestamp().isBefore(requestDTO.getEndTimestamp().minusHours(1)))
         // {
         // throw new RuntimeException("Event duration must be at least 1 hour");
         // }
         if (requestDTO.getStartTimestamp().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Event start time cannot be in the past");
+            throw new InvalidEventArgumentsException("Event start time cannot be in the past");
         }
         if (requestDTO.getEndTimestamp().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Event end time cannot be in the past");
+            throw new InvalidEventArgumentsException("Event end time cannot be in the past");
         }
     }
 }

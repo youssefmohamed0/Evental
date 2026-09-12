@@ -8,16 +8,17 @@ import org.springframework.stereotype.Service;
 
 import joe.app.EventReservationApp.DTO.CreateVenueDTO;
 import joe.app.EventReservationApp.DTO.VenueSummaryDTO;
+import joe.app.EventReservationApp.Exception.VenueNotFoundException;
 import joe.app.EventReservationApp.Mapper.VenueMapper;
 import joe.app.EventReservationApp.Model.Venue;
 import joe.app.EventReservationApp.Repository.VenueRepository;
 
-@Service 
+@Service
 public class VenueService {
 
-    @Autowired 
+    @Autowired
     private VenueRepository venueRepository;
-    @Autowired 
+    @Autowired
     private VenueMapper venueMapper;
 
     public List<VenueSummaryDTO> getAllVenues() {
@@ -25,7 +26,8 @@ public class VenueService {
     }
 
     public VenueSummaryDTO getVenueById(UUID id) {
-        return venueMapper.toVenueSummaryDTO(venueRepository.findById(id).orElseThrow(() -> new RuntimeException("Venue not found with id: " + id)));
+        return venueMapper.toVenueSummaryDTO(venueRepository.findById(id)
+                .orElseThrow(() -> new VenueNotFoundException("Venue not found with id: " + id)));
     }
 
     public VenueSummaryDTO createVenue(CreateVenueDTO venueDTO) {
@@ -38,7 +40,8 @@ public class VenueService {
     }
 
     public VenueSummaryDTO updateVenue(UUID id, CreateVenueDTO venueDTO) {
-        Venue venue = venueRepository.findById(id).orElseThrow(() -> new RuntimeException("Venue not found with id: " + id));
+        Venue venue = venueRepository.findById(id)
+                .orElseThrow(() -> new VenueNotFoundException("Venue not found with id: " + id));
         venue.setName(venueDTO.getName());
         venue.setLocation(venueDTO.getLocation());
         venue.setStars(venueDTO.getStars());

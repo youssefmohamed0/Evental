@@ -2,7 +2,6 @@ package joe.app.EventReservationApp.Service;
 
 import joe.app.EventReservationApp.DTO.ProfileDetailsDTO;
 import joe.app.EventReservationApp.DTO.UpdateProfileDTO;
-import joe.app.EventReservationApp.Enum.Role;
 import joe.app.EventReservationApp.Mapper.ProfileMapper;
 import joe.app.EventReservationApp.Model.User;
 import joe.app.EventReservationApp.Repository.UserRepository;

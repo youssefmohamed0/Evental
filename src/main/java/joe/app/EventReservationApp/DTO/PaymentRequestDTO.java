@@ -1,7 +1,6 @@
 package joe.app.EventReservationApp.DTO;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
