@@ -15,9 +15,11 @@ import joe.app.EventReservationApp.DTO.EventDetailDTO;
 import joe.app.EventReservationApp.DTO.EventSummaryDTO;
 import joe.app.EventReservationApp.DTO.ReservationDetailDTO;
 import joe.app.EventReservationApp.DTO.ReservationSummaryDTO;
+import joe.app.EventReservationApp.DTO.UserSummaryDTO;
 import joe.app.EventReservationApp.DTO.VenueSummaryDTO;
 import joe.app.EventReservationApp.Service.EventService;
 import joe.app.EventReservationApp.Service.ReservationService;
+import joe.app.EventReservationApp.Service.UserService;
 import joe.app.EventReservationApp.Service.VenueService;
 
 @RestController
@@ -30,6 +32,8 @@ public class AdminController {
     private ReservationService reservationService;
     @Autowired
     private VenueService venueService;
+    @Autowired
+    private UserService userService;
 
     // redundant: could be same as public endpoint
     @GetMapping("/events")
@@ -116,17 +120,16 @@ public class AdminController {
         return ResponseEntity.ok(null);
     }
 
-    // @GetMapping("/users")
-    // public ResponseEntity<List<UserSummaryDTO>> getAllUsers() {
-    // List<UserSummaryDTO> response = userService.getAllUsers();
-    // return ResponseEntity.ok(response);
-    // }
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSummaryDTO>> getAllUsers() {
+        List<UserSummaryDTO> response = userService.getAllUsers();
+        return ResponseEntity.ok(response);
+    }
 
-    // @GetMapping("/users/{userId}")
-    // public ResponseEntity<UserDetailDTO> getUserById(@PathVariable UUID userId,
-    // Authentication authentication) {
-    // UserDetailDTO response = userService.getUserById(userId, authentication);
-    // return ResponseEntity.ok(response);
-    // }
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<UserSummaryDTO> getUserById(@PathVariable UUID userId) {
+        UserSummaryDTO response = userService.getUserById(userId);
+        return ResponseEntity.ok(response);
+    }
 
 }

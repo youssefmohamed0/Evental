@@ -1,0 +1,1091 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Event Ticketing & Seat Reservation API",
+    "description": "Backend API for discovering events, reserving seats, and managing concurrent bookings with JWT authentication and role-based access.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9090",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/api/profile": {
+      "get": {
+        "tags": ["Customer Profile"],
+        "summary": "Get current user profile",
+        "description": "Retrieves the details of the currently authenticated user based on their JWT.",
+        "operationId": "getProfileDetails",
+        "responses": {
+          "200": {
+            "description": "Profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileDetailsDTO" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Customer Profile"],
+        "summary": "Update user profile",
+        "description": "Updates the profile details (name, email, password) for the authenticated user.",
+        "operationId": "updateProfileDetails",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfileDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileDetailsDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizer/events": {
+      "get": {
+        "tags": ["Organizer"],
+        "summary": "List organizer's events",
+        "description": "Returns a summary list of all events managed by the currently logged-in organizer.",
+        "operationId": "organizerGetEvents",
+        "responses": {
+          "200": {
+            "description": "List of events retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/EventSummaryDTO" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Organizer"],
+        "summary": "Create a new event",
+        "description": "Creates a new event and automatically generates the designated seat capacity in the database.",
+        "operationId": "organizerCreateEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEventRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventSummaryDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizer/events/{eventId}": {
+      "get": {
+        "tags": ["Organizer"],
+        "summary": "Get organizer's event details",
+        "description": "Retrieves the full details of a specific event managed by the logged-in organizer.",
+        "operationId": "organizerGetEventDetails",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailDTO" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Organizer"],
+        "summary": "Update organizer's event",
+        "description": "Updates the details of an existing event owned by the logged-in organizer.",
+        "operationId": "organizerUpdateEvent",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEventRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizer/events/{eventId}/reservations": {
+      "get": {
+        "tags": ["Organizer"],
+        "summary": "Get reservations for event",
+        "description": "Retrieves a list of all reservations made for a specific event owned by the organizer.",
+        "operationId": "organizerGetEventReservations",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservations retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizer/reservations/{reservationId}": {
+      "get": {
+        "tags": ["Organizer"],
+        "summary": "Get detailed reservation (Organizer)",
+        "description": "Retrieves the full details of a specific reservation tied to one of the organizer's events.",
+        "operationId": "organizerGetReservationById",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDetailDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/events": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all events system-wide",
+        "description": "Retrieves a summary list of all events across the entire platform.",
+        "operationId": "adminGetAllEvents",
+        "responses": {
+          "200": {
+            "description": "All events retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/EventSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/events/{eventId}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get any event details",
+        "description": "Retrieves the details of any event system-wide.",
+        "operationId": "adminGetEventDetails",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailDTO" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update any event",
+        "description": "Force updates any event system-wide, bypassing ownership checks.",
+        "operationId": "adminUpdateEvent",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEventRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailDTO" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete any event",
+        "description": "Force deletes an event and cascades to its seats and reservations.",
+        "operationId": "adminDeleteEvent",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Event deleted successfully" }
+        }
+      }
+    },
+    "/api/admin/events/{eventId}/reservations": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get reservations by event",
+        "description": "Retrieves all reservations for a specific event system-wide.",
+        "operationId": "adminGetReservationsByEvent",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservations retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/venues": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a new venue",
+        "description": "Adds a new venue to the platform that organizers can use to host events.",
+        "operationId": "adminCreateVenue",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateVenueDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Venue created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VenueSummaryDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/venues/{venueId}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update a venue",
+        "description": "Updates details like location or stars for a specific venue.",
+        "operationId": "adminUpdateVenue",
+        "parameters": [
+          { "name": "venueId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateVenueDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Venue updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VenueSummaryDTO" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete a venue",
+        "description": "Removes a venue from the system.",
+        "operationId": "adminDeleteVenue",
+        "parameters": [
+          { "name": "venueId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Venue deleted successfully" }
+        }
+      }
+    },
+    "/api/admin/venues/{venueId}/reservations": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get reservations by venue",
+        "description": "Retrieves all reservations tied to events hosted at a specific venue.",
+        "operationId": "adminGetReservationsByVenue",
+        "parameters": [
+          { "name": "venueId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservations retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reservations": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all reservations system-wide",
+        "description": "Retrieves every reservation currently in the database.",
+        "operationId": "adminGetAllReservations",
+        "responses": {
+          "200": {
+            "description": "All reservations retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reservations/{reservationId}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get any reservation details",
+        "description": "Retrieves detailed information for any specific reservation system-wide.",
+        "operationId": "adminGetReservationById",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDetailDTO" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete or force-cancel reservation",
+        "description": "Forces the cancellation and deletion of any reservation system-wide.",
+        "operationId": "adminCancelReservation",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Reservation cancelled/deleted" }
+        }
+      }
+    },
+    "/api/customer/reservations": {
+      "get": {
+        "tags": ["Customer Reservations"],
+        "summary": "Get customer's active/upcoming reservations",
+        "description": "Retrieves a summary list of the authenticated customer's upcoming reservations.",
+        "operationId": "customerGetReservations",
+        "responses": {
+          "200": {
+            "description": "Reservations retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Customer Reservations"],
+        "summary": "Create reservation (Lock seats)",
+        "description": "Initiates a reservation, locking the selected seats (status changed to PENDING) and awaiting payment.",
+        "operationId": "customerCreateReservation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateReservationRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation created (PENDING state)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer/reservations/history": {
+      "get": {
+        "tags": ["Customer Reservations"],
+        "summary": "Get customer's reservation history",
+        "description": "Retrieves past or expired/cancelled reservations for the authenticated customer.",
+        "operationId": "customerGetReservationsHistory",
+        "responses": {
+          "200": {
+            "description": "Reservation history retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReservationSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer/reservations/{reservationId}": {
+      "get": {
+        "tags": ["Customer Reservations"],
+        "summary": "Get specific reservation details",
+        "description": "Retrieves the full details (including seat numbers and status) of a specific reservation owned by the customer.",
+        "operationId": "customerGetReservationById",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReservationDetailDTO" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Customer Reservations"],
+        "summary": "Cancel a reservation",
+        "description": "Cancels a specific reservation and releases the locked seats back to AVAILABLE status.",
+        "operationId": "customerCancelReservation",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Reservation cancelled successfully" }
+        }
+      }
+    },
+    "/api/customer/reservations/{reservationId}/pay": {
+      "post": {
+        "tags": ["Customer Reservations"],
+        "summary": "Process payment for reservation",
+        "description": "Simulates payment processing. On success, upgrades the reservation status to CONFIRMED and seats to BOOKED.",
+        "operationId": "customerProcessPayment",
+        "parameters": [
+          { "name": "reservationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment processed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "example": "Payment successful, reservation confirmed." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": ["Public Events"],
+        "summary": "List all events",
+        "description": "Retrieves a public summary list of all available events.",
+        "operationId": "publicGetAllEvents",
+        "responses": {
+          "200": {
+            "description": "Events retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/EventSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{eventId}": {
+      "get": {
+        "tags": ["Public Events"],
+        "summary": "Get event details",
+        "description": "Retrieves the full public details of a specific event.",
+        "operationId": "publicGetEventById",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{eventId}/seats": {
+      "get": {
+        "tags": ["Public Events"],
+        "summary": "Get event seats availability",
+        "description": "Retrieves a list of all seats for an event and their current availability status.",
+        "operationId": "publicGetEventSeats",
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Seats retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/SeatResponseDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/venues": {
+      "get": {
+        "tags": ["Public Venues"],
+        "summary": "List all venues",
+        "description": "Retrieves a public list of all venues.",
+        "operationId": "publicGetAllVenues",
+        "responses": {
+          "200": {
+            "description": "Venues retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/VenueSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/venues/{venueId}": {
+      "get": {
+        "tags": ["Public Venues"],
+        "summary": "Get venue details",
+        "description": "Retrieves the public details of a specific venue.",
+        "operationId": "publicGetVenueById",
+        "parameters": [
+          { "name": "venueId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Venue details retrieved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VenueSummaryDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/venues/{venueId}/events": {
+      "get": {
+        "tags": ["Public Venues"],
+        "summary": "List events for a venue",
+        "description": "Retrieves all events scheduled to take place at a specific venue.",
+        "operationId": "publicGetEventsByVenueId",
+        "parameters": [
+          { "name": "venueId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/EventSummaryDTO" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/signup": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Registration",
+        "description": "Registers a new user (Customer or Organizer) and returns initial JWT tokens.",
+        "operationId": "authSignup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignupRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Login",
+        "description": "Authenticates a user by username/password and returns JWT access/refresh tokens.",
+        "operationId": "authLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": { "accessToken": "eyJhbG...", "refreshToken": "eyJhbG...", "username": "johndoe", "role": "CUSTOMER" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh Access Token",
+        "description": "Uses a valid refresh token to generate a new JWT access token.",
+        "operationId": "authRefreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshRequestDTO" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": { "accessToken": "eyJhbG...", "refreshToken": "eyJhbG..." }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Logout",
+        "description": "Invalidates the user's current session or refresh token.",
+        "operationId": "authLogout",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": { "message": "Successfully logged out" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth-test": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Test Authentication Setup",
+        "description": "A debug endpoint that returns the authenticated user's parsed details from the security context.",
+        "operationId": "authTest",
+        "responses": {
+          "200": {
+            "description": "Auth details verified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthTestDTO" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UpdateProfileDTO": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "example": {
+          "username": "johndoe",
+          "email": "john.doe@example.com",
+          "name": "John Doe",
+          "password": "NewSecurePassword123!"
+        }
+      },
+      "ProfileDetailsDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "creationDate": { "type": "string", "format": "date-time" },
+          "role": { "type": "string" }
+        },
+        "example": {
+          "id": "a1b2c3d4-e5f6-7a8b-9c0d-1234567890ab",
+          "username": "johndoe",
+          "email": "john.doe@example.com",
+          "name": "John Doe",
+          "creationDate": "2026-09-12T10:00:00Z",
+          "role": "CUSTOMER"
+        }
+      },
+      "CreateEventRequestDTO": {
+        "type": "object",
+        "properties": {
+          "venueId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "theme": { "type": "string" },
+          "description": { "type": "string" },
+          "startTimestamp": { "type": "string", "format": "date-time" },
+          "endTimestamp": { "type": "string", "format": "date-time" },
+          "ticketPrice": { "type": "number" },
+          "seatCapacity": { "type": "integer", "format": "int64" }
+        },
+        "example": {
+          "venueId": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "Spring Boot Global Summit 2026",
+          "theme": "Technology & Backend",
+          "description": "A comprehensive deep dive into microservices and scaling with Spring Boot 3.",
+          "startTimestamp": "2026-11-15T09:00:00Z",
+          "endTimestamp": "2026-11-15T18:00:00Z",
+          "ticketPrice": 150.00,
+          "seatCapacity": 200
+        }
+      },
+      "EventDetailDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "theme": { "type": "string" },
+          "venueId": { "type": "string", "format": "uuid" },
+          "venueName": { "type": "string" },
+          "venueStars": { "type": "integer", "format": "int32" },
+          "seatCapacity": { "type": "integer", "format": "int32" },
+          "ticketPrice": { "type": "number" },
+          "startTimestamp": { "type": "string", "format": "date-time" },
+          "organizerName": { "type": "string" },
+          "endTimestamp": { "type": "string", "format": "date-time" },
+          "description": { "type": "string" }
+        },
+        "example": {
+          "id": "e44d32f1-9b1a-4c22-8176-a19e34e56b82",
+          "name": "Spring Boot Global Summit 2026",
+          "theme": "Technology & Backend",
+          "venueId": "550e8400-e29b-41d4-a716-446655440000",
+          "venueName": "Grand Tech Arena",
+          "venueStars": 5,
+          "seatCapacity": 200,
+          "ticketPrice": 150.00,
+          "startTimestamp": "2026-11-15T09:00:00Z",
+          "endTimestamp": "2026-11-15T18:00:00Z",
+          "organizerName": "Tech Conferences LLC",
+          "description": "A comprehensive deep dive into microservices and scaling with Spring Boot 3."
+        }
+      },
+      "CreateVenueDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "stars": { "type": "integer", "format": "int32" },
+          "description": { "type": "string" }
+        },
+        "example": {
+          "name": "Grand Tech Arena",
+          "location": "Downtown Tech District, CA",
+          "stars": 5,
+          "description": "A state-of-the-art auditorium designed for large-scale technology summits."
+        }
+      },
+      "VenueSummaryDTO": {
+        "type": "object",
+        "properties": {
+          "venueId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "stars": { "type": "integer", "format": "int32" },
+          "description": { "type": "string" }
+        },
+        "example": {
+          "venueId": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "Grand Tech Arena",
+          "location": "Downtown Tech District, CA",
+          "stars": 5,
+          "description": "A state-of-the-art auditorium designed for large-scale technology summits."
+        }
+      },
+      "EventSummaryDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "theme": { "type": "string" },
+          "venueId": { "type": "string", "format": "uuid" },
+          "venueName": { "type": "string" },
+          "venueStars": { "type": "integer", "format": "int32" },
+          "seatCapacity": { "type": "integer", "format": "int32" },
+          "ticketPrice": { "type": "number" },
+          "startTimestamp": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "id": "e44d32f1-9b1a-4c22-8176-a19e34e56b82",
+          "name": "Spring Boot Global Summit 2026",
+          "theme": "Technology & Backend",
+          "venueId": "550e8400-e29b-41d4-a716-446655440000",
+          "venueName": "Grand Tech Arena",
+          "venueStars": 5,
+          "seatCapacity": 200,
+          "ticketPrice": 150.00,
+          "startTimestamp": "2026-11-15T09:00:00Z"
+        }
+      },
+      "CreateReservationRequestDTO": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string", "format": "uuid" },
+          "seatIds": { "type": "array", "items": { "type": "string", "format": "uuid" } }
+        },
+        "example": {
+          "eventId": "e44d32f1-9b1a-4c22-8176-a19e34e56b82",
+          "seatIds": [
+            "3d4b68e1-512c-4977-8c34-eb5c79e652a9",
+            "7a5e84fc-921c-4b68-8254-ca76d91c5e42"
+          ]
+        }
+      },
+      "PaymentRequestDTO": {
+        "type": "object",
+        "properties": {
+          "paymentMethod": { "type": "string" },
+          "cardNumber": { "type": "string" },
+          "cardExpiry": { "type": "string" },
+          "cardCvv": { "type": "string" },
+          "cashAmount": { "type": "number" }
+        },
+        "example": {
+          "paymentMethod": "CREDIT_CARD",
+          "cardNumber": "4111222233334444",
+          "cardExpiry": "12/28",
+          "cardCvv": "123",
+          "cashAmount": 0.0
+        }
+      },
+      "SignupRequestDTO": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "example": {
+          "username": "janesmith",
+          "password": "SecurePassword123!",
+          "email": "jane.smith@example.com",
+          "name": "Jane Smith"
+        }
+      },
+      "AuthResponseDTO": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "username": { "type": "string" },
+          "role": { "type": "string" }
+        },
+        "example": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR...",
+          "refreshToken": "d8f7e2a9-c45b-4191-88f2-...",
+          "username": "janesmith",
+          "role": "CUSTOMER"
+        }
+      },
+      "RefreshRequestDTO": {
+        "type": "object",
+        "properties": {
+          "refreshToken": { "type": "string" }
+        },
+        "example": {
+          "refreshToken": "d8f7e2a9-c45b-4191-88f2-0123456789ab"
+        }
+      },
+      "LoginRequestDTO": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "example": {
+          "username": "janesmith",
+          "password": "SecurePassword123!"
+        }
+      },
+      "ReservationDetailDTO": {
+        "type": "object",
+        "properties": {
+          "reservationId": { "type": "string", "format": "uuid" },
+          "eventId": { "type": "string", "format": "uuid" },
+          "eventName": { "type": "string" },
+          "eventStartTime": { "type": "string", "format": "date-time" },
+          "eventEndTime": { "type": "string", "format": "date-time" },
+          "venueName": { "type": "string" },
+          "seatsNumbers": { "type": "array", "items": { "type": "string" } },
+          "totalPrice": { "type": "number" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "reservationId": "9b1c72f4-a83b-4b11-91a5-813c9e651d2e",
+          "eventId": "e44d32f1-9b1a-4c22-8176-a19e34e56b82",
+          "eventName": "Spring Boot Global Summit 2026",
+          "eventStartTime": "2026-11-15T09:00:00Z",
+          "eventEndTime": "2026-11-15T18:00:00Z",
+          "venueName": "Grand Tech Arena",
+          "seatsNumbers": ["A1", "A2"],
+          "totalPrice": 300.00,
+          "status": "CONFIRMED",
+          "createdAt": "2026-10-01T14:32:00Z"
+        }
+      },
+      "ReservationSummaryDTO": {
+        "type": "object",
+        "properties": {
+          "reservationId": { "type": "string", "format": "uuid" },
+          "eventId": { "type": "string", "format": "uuid" },
+          "eventName": { "type": "string" },
+          "status": { "type": "string" },
+          "totalPrice": { "type": "number", "format": "double" }
+        },
+        "example": {
+          "reservationId": "9b1c72f4-a83b-4b11-91a5-813c9e651d2e",
+          "eventId": "e44d32f1-9b1a-4c22-8176-a19e34e56b82",
+          "eventName": "Spring Boot Global Summit 2026",
+          "status": "CONFIRMED",
+          "totalPrice": 300.00
+        }
+      },
+      "SeatResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "seatNumber": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "example": {
+          "id": "3d4b68e1-512c-4977-8c34-eb5c79e652a9",
+          "seatNumber": "A1",
+          "status": "AVAILABLE"
+        }
+      },
+      "AuthTestDTO": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "role": { "type": "string" }
+        },
+        "example": {
+          "username": "janesmith",
+          "role": "CUSTOMER"
+        }
+      }
+    }
+  }
+}

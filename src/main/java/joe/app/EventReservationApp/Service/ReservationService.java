@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -153,6 +154,33 @@ public class ReservationService {
             item.getSeat().setStatus(SeatStatus.AVAILABLE);
         }
         reservationRepository.save(reservation);
+    }
+
+    @Transactional
+    @Scheduled(fixedRate = 60000) // Runs every 1 minute
+    public void expireUnpaidReservations() {
+        // Calculate the cutoff time (15 minutes ago)
+        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(15);
+
+        // Fetch all PENDING reservations older than 15 minutes
+        List<Reservation> expiredReservations = reservationRepository
+                .findByStatusAndCreatedAtBefore(ReservationStatus.PENDING, cutoffTime);
+
+        if (!expiredReservations.isEmpty()) {
+            for (Reservation reservation : expiredReservations) {
+                // Update reservation status
+                reservation.setStatus(ReservationStatus.EXPIRED); 
+
+                // Free up the associated seats
+                for (ReservationItem item : reservation.getItems()) {
+                    item.getSeat().setStatus(SeatStatus.AVAILABLE);
+                }
+            }
+            
+            reservationRepository.saveAll(expiredReservations);
+            
+            System.out.println("Cleaned up " + expiredReservations.size() + " expired reservations.");
+        }
     }
 
     private void authorizeReservationAccess(Reservation reservation, Authentication authentication) {
